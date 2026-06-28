@@ -9,8 +9,9 @@ import { TABLE_TYPES } from '../../data/defaultShapes.js';
 import {
   Undo2, Redo2, ZoomIn, ZoomOut, Maximize2, RotateCcw, Grid3X3,
   Save, FolderOpen, Download, Upload, FilePlus, Search, Moon, Sun,
-  Magnet
+  Magnet, LogOut
 } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore.js';
 
 export default function TopBar({ darkMode, setDarkMode }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,6 +20,7 @@ export default function TopBar({ darkMode, setDarkMode }) {
   const [projectNameEdit, setProjectNameEdit] = useState(false);
 
   const { projectName, setProjectName, exportData, loadProject, newProject, getObjects, isDirty } = useProjectStore();
+  const { user, signOut } = useAuthStore();
   const { zoom, zoomIn, zoomOut, fitToScreen, resetZoom, gridVisible, toggleGrid, snapToGrid, toggleSnap, setZoom } = useCanvasStore();
   const { canUndo, canRedo, undo, redo, push } = useHistoryStore();
   const { deselect } = useSelectionStore();
@@ -202,6 +204,20 @@ export default function TopBar({ darkMode, setDarkMode }) {
       >
         {darkMode ? <Sun size={15} /> : <Moon size={15} />}
       </button>
+
+      {/* User + logout */}
+      {user && (
+        <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
+          <span className="text-xs text-gray-500 hidden lg:block max-w-32 truncate">{user.email}</span>
+          <button
+            onClick={signOut}
+            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+            title="Sign out"
+          >
+            <LogOut size={15} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

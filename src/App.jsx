@@ -10,15 +10,17 @@ import MobilePropertiesSheet from './components/Sidebar/MobilePropertiesSheet.js
 import GuestPanel from './components/Sidebar/GuestPanel.jsx';
 import Minimap from './components/Minimap/Minimap.jsx';
 import StatusBar from './components/Canvas/StatusBar.jsx';
+import AuthScreen from './components/Auth/AuthScreen.jsx';
 import { useKeyboard } from './hooks/useKeyboard.js';
 import { useAutosave } from './hooks/useAutosave.js';
 import { useMobile } from './hooks/useMobile.js';
 import { useProjectStore } from './store/projectStore.js';
 import { useCanvasStore } from './store/canvasStore.js';
 import { useSelectionStore } from './store/selectionStore.js';
-import { loadAutosave } from './utils/fileIO.js';
+import { useAuthStore } from './store/authStore.js';
+import { loadProjectFromCloud } from './utils/cloudSync.js';
 import { createSampleProject } from './data/sampleProject.js';
-import { Keyboard, Hand, MousePointer2 } from 'lucide-react';
+import { Keyboard, Hand, MousePointer2, Loader2 } from 'lucide-react';
 
 const SHORTCUTS = [
   { key: 'Ctrl+Z', desc: 'Undo' },
@@ -39,20 +41,43 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
 
-  const { loadProject, getObjects } = useProjectStore();
+  const { loadProject } = useProjectStore();
   const { fitToScreen } = useCanvasStore();
   const { tool, setTool } = useSelectionStore();
   const { isMobile, isTablet } = useMobile();
+  const { user, loading, init } = useAuthStore();
 
   useKeyboard();
   useAutosave();
 
+  // Init auth session on mount
+  useEffect(() => { init(); }, []);
+
+  // Load project once user is known
   useEffect(() => {
-    loadProject(createSampleProject());
-    setTimeout(() => fitToScreen(useProjectStore.getState().getObjects()), 200);
-  }, []);
+    if (loading) return;
+    const bootstrap = async () => {
+      let project = null;
+      if (user) {
+        try { project = await loadProjectFromCloud(user.id); } catch (_) {}
+      }
+      loadProject(project ?? createSampleProject());
+      setTimeout(() => fitToScreen(useProjectStore.getState().getObjects()), 200);
+    };
+    bootstrap();
+  }, [user, loading]);
 
   const isCompact = isMobile || isTablet;
+
+  if (loading) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 size={32} className="animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!user) return <AuthScreen />;
 
   return (
     <div className={`flex flex-col w-screen h-screen overflow-hidden ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
