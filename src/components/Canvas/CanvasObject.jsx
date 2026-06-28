@@ -1,4 +1,4 @@
-import { memo, useRef, useCallback, useEffect } from 'react';
+import { memo, useRef, useCallback } from 'react';
 import { Group } from 'react-konva';
 import TableNode from './TableNode.jsx';
 import ShapeNode from './ShapeNode.jsx';
@@ -14,7 +14,7 @@ const CanvasObject = memo(({ obj }) => {
   const dragStart = useRef(null);
 
   const { updateObject, updateObjectRaw, getObjects, exportData } = useProjectStore();
-  const { selectedIds, select, addToSelection, setHovered } = useSelectionStore();
+  const { selectedIds, select, addToSelection, setHovered, setEditingChair } = useSelectionStore();
   const { snapToGrid: snap, gridSize } = useCanvasStore();
   const { push } = useHistoryStore();
 
@@ -29,6 +29,13 @@ const CanvasObject = memo(({ obj }) => {
       select(obj.id);
     }
   }, [obj.id, select, addToSelection]);
+
+  const handleDblClick = useCallback((e) => {
+    e.cancelBubble = true;
+    if (!isTable) return;
+    const firstChair = obj.chairs?.[0];
+    if (firstChair) setEditingChair(obj.id, firstChair.id);
+  }, [isTable, obj.id, obj.chairs, setEditingChair]);
 
   const handleDragStart = useCallback(() => {
     dragStart.current = exportData();
@@ -80,6 +87,8 @@ const CanvasObject = memo(({ obj }) => {
       draggable={!obj.locked}
       onClick={handleClick}
       onTap={handleClick}
+      onDblClick={handleDblClick}
+      onDblTap={handleDblClick}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onTransformEnd={handleTransformEnd}

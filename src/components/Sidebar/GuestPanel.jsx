@@ -25,6 +25,7 @@ const STATUS_COLORS = {
 export default function GuestPanel() {
   const { editingChair, clearEditingChair } = useSelectionStore();
   const { getObjects, updateChair } = useProjectStore();
+  const { isMobile } = useMobile();
 
   const [form, setForm] = useState({
     guestName: '', guestPhone: '', guestEmail: '',
@@ -59,8 +60,6 @@ export default function GuestPanel() {
     updateChair(editingChair.tableId, editingChair.chairId, cleared);
     clearEditingChair();
   };
-
-  const { isMobile } = useMobile();
   const panelClass = isMobile
     ? 'fixed inset-0 bg-white z-50 flex flex-col'
     : 'fixed inset-y-0 right-0 w-80 bg-white shadow-2xl border-l border-gray-200 z-40 flex flex-col';
