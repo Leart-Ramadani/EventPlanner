@@ -1,0 +1,97 @@
+import { memo, useRef, useCallback, useEffect } from 'react';
+import { Group } from 'react-konva';
+import TableNode from './TableNode.jsx';
+import ShapeNode from './ShapeNode.jsx';
+import { TABLE_TYPES } from '../../data/defaultShapes.js';
+import { useProjectStore } from '../../store/projectStore.js';
+import { useSelectionStore } from '../../store/selectionStore.js';
+import { useCanvasStore } from '../../store/canvasStore.js';
+import { useHistoryStore } from '../../store/historyStore.js';
+import { snapToGrid } from '../../utils/geometry.js';
+
+const CanvasObject = memo(({ obj }) => {
+  const groupRef = useRef(null);
+  const dragStart = useRef(null);
+
+  const { updateObject, updateObjectRaw, getObjects, exportData } = useProjectStore();
+  const { selectedIds, select, addToSelection, setHovered } = useSelectionStore();
+  const { snapToGrid: snap, gridSize } = useCanvasStore();
+  const { push } = useHistoryStore();
+
+  const isSelected = selectedIds.includes(obj.id);
+  const isTable = TABLE_TYPES.includes(obj.type);
+
+  const handleClick = useCallback((e) => {
+    e.cancelBubble = true;
+    if (e.evt.shiftKey) {
+      addToSelection(obj.id);
+    } else {
+      select(obj.id);
+    }
+  }, [obj.id, select, addToSelection]);
+
+  const handleDragStart = useCallback(() => {
+    dragStart.current = exportData();
+    if (!selectedIds.includes(obj.id)) select(obj.id);
+  }, [obj.id, select, selectedIds, exportData]);
+
+  const handleDragEnd = useCallback((e) => {
+    let x = e.target.x();
+    let y = e.target.y();
+    if (snap) {
+      x = snapToGrid(x, gridSize);
+      y = snapToGrid(y, gridSize);
+      e.target.x(x);
+      e.target.y(y);
+    }
+    if (dragStart.current) push(dragStart.current);
+    updateObjectRaw(obj.id, { x, y });
+  }, [obj.id, updateObjectRaw, snap, gridSize, push]);
+
+  const handleTransformEnd = useCallback((e) => {
+    const node = groupRef.current;
+    if (!node) return;
+    const scaleX = node.scaleX();
+    const scaleY = node.scaleY();
+    node.scaleX(1);
+    node.scaleY(1);
+    const newW = Math.max(20, obj.width * scaleX);
+    const newH = Math.max(20, obj.height * scaleY);
+    push(exportData());
+    updateObject(obj.id, {
+      x: node.x(),
+      y: node.y(),
+      width: newW,
+      height: newH,
+      rotation: node.rotation(),
+    });
+  }, [obj, updateObject, push, exportData]);
+
+  if (!obj.visible) return null;
+
+  return (
+    <Group
+      ref={groupRef}
+      id={obj.id}
+      x={obj.x + obj.width / 2}
+      y={obj.y + obj.height / 2}
+      rotation={obj.rotation || 0}
+      opacity={obj.opacity ?? 1}
+      draggable={!obj.locked}
+      onClick={handleClick}
+      onTap={handleClick}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onTransformEnd={handleTransformEnd}
+      onMouseEnter={() => setHovered(obj.id)}
+      onMouseLeave={() => setHovered(null)}
+    >
+      {isTable
+        ? <TableNode obj={obj} isSelected={isSelected} />
+        : <ShapeNode obj={obj} isSelected={isSelected} />
+      }
+    </Group>
+  );
+});
+
+export default CanvasObject;
