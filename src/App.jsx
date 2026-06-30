@@ -101,9 +101,6 @@ export default function App() {
         <div ref={canvasContainerRef} className="flex-1 relative overflow-hidden bg-gray-50">
           <InfiniteCanvas containerRef={canvasContainerRef} />
 
-          {/* Minimap — tablet + desktop */}
-          {!isMobile && <Minimap />}
-
           {/* Desktop: shortcuts button + hint */}
           {!isCompact && (
             <>
