@@ -4,13 +4,15 @@ import { useCanvasStore } from '../../store/canvasStore.js';
 import { useHistoryStore } from '../../store/historyStore.js';
 import { useSelectionStore } from '../../store/selectionStore.js';
 import { exportJSON, importJSON } from '../../utils/fileIO.js';
+import MobileGuestSearch from '../Sidebar/MobileGuestSearch.jsx';
 import {
   Undo2, Redo2, Maximize2, Save, FolderOpen, FilePlus,
-  MoreHorizontal, Grid3X3, Magnet, ZoomIn, ZoomOut, X
+  MoreHorizontal, Grid3X3, Magnet, ZoomIn, ZoomOut, X, Search
 } from 'lucide-react';
 
 export default function MobileTopBar({ darkMode, setDarkMode }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [showGuestSearch, setShowGuestSearch] = useState(false);
   const { projectName, exportData, loadProject, newProject, getObjects, isDirty, setProjectName } = useProjectStore();
   const { zoom, zoomIn, zoomOut, fitToScreen, toggleGrid, toggleSnap, gridVisible, snapToGrid } = useCanvasStore();
   const { canUndo, canRedo, undo, redo } = useHistoryStore();
@@ -27,6 +29,8 @@ export default function MobileTopBar({ darkMode, setDarkMode }) {
   };
 
   return (
+    <>
+    {showGuestSearch && <MobileGuestSearch onClose={() => setShowGuestSearch(false)} />}
     <div className="h-12 bg-white border-b border-gray-200 flex items-center px-3 gap-2 shadow-sm z-20 flex-shrink-0">
       {/* Logo + name */}
       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -43,6 +47,11 @@ export default function MobileTopBar({ darkMode, setDarkMode }) {
       </button>
       <button onClick={() => redo(exportData(), (s) => loadProject(s))} disabled={!canRedo()} className="p-2 rounded-lg disabled:opacity-30 hover:bg-gray-100">
         <Redo2 size={18} className="text-gray-600" />
+      </button>
+
+      {/* Search guests */}
+      <button onClick={() => setShowGuestSearch(true)} className="p-2 rounded-lg hover:bg-gray-100">
+        <Search size={18} className="text-gray-600" />
       </button>
 
       {/* Fit to screen */}
@@ -87,5 +96,6 @@ export default function MobileTopBar({ darkMode, setDarkMode }) {
         )}
       </div>
     </div>
+    </>
   );
 }

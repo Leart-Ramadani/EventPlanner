@@ -14,7 +14,7 @@ const CanvasObject = memo(({ obj }) => {
   const dragStart = useRef(null);
 
   const { updateObject, updateObjectRaw, getObjects, exportData } = useProjectStore();
-  const { selectedIds, select, addToSelection, setHovered, setEditingChair } = useSelectionStore();
+  const { selectedIds, select, addToSelection, setHovered, setEditingChair, tool } = useSelectionStore();
   const { snapToGrid: snap, gridSize } = useCanvasStore();
   const { push } = useHistoryStore();
 
@@ -22,13 +22,14 @@ const CanvasObject = memo(({ obj }) => {
   const isTable = TABLE_TYPES.includes(obj.type);
 
   const handleClick = useCallback((e) => {
+    if (tool === 'pan') return;
     e.cancelBubble = true;
     if (e.evt.shiftKey) {
       addToSelection(obj.id);
     } else {
       select(obj.id);
     }
-  }, [obj.id, select, addToSelection]);
+  }, [obj.id, select, addToSelection, tool]);
 
   const handleDblClick = useCallback((e) => {
     e.cancelBubble = true;
@@ -43,17 +44,21 @@ const CanvasObject = memo(({ obj }) => {
   }, [obj.id, select, selectedIds, exportData]);
 
   const handleDragEnd = useCallback((e) => {
-    let x = e.target.x();
-    let y = e.target.y();
+    // e.target is the Group whose origin is at obj.x + width/2, obj.y + height/2
+    let cx = e.target.x();
+    let cy = e.target.y();
     if (snap) {
-      x = snapToGrid(x, gridSize);
-      y = snapToGrid(y, gridSize);
-      e.target.x(x);
-      e.target.y(y);
+      // Snap the top-left corner then recompute center
+      const snappedX = snapToGrid(cx - obj.width / 2, gridSize);
+      const snappedY = snapToGrid(cy - obj.height / 2, gridSize);
+      cx = snappedX + obj.width / 2;
+      cy = snappedY + obj.height / 2;
+      e.target.x(cx);
+      e.target.y(cy);
     }
     if (dragStart.current) push(dragStart.current);
-    updateObjectRaw(obj.id, { x, y });
-  }, [obj.id, updateObjectRaw, snap, gridSize, push]);
+    updateObjectRaw(obj.id, { x: cx - obj.width / 2, y: cy - obj.height / 2 });
+  }, [obj.id, obj.width, obj.height, updateObjectRaw, snap, gridSize, push]);
 
   const handleTransformEnd = useCallback((e) => {
     const node = groupRef.current;
@@ -84,7 +89,7 @@ const CanvasObject = memo(({ obj }) => {
       y={obj.y + obj.height / 2}
       rotation={obj.rotation || 0}
       opacity={obj.opacity ?? 1}
-      draggable={!obj.locked}
+      draggable={!obj.locked && tool !== 'pan'}
       onClick={handleClick}
       onTap={handleClick}
       onDblClick={handleDblClick}
