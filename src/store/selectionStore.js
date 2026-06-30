@@ -5,6 +5,7 @@ export const useSelectionStore = create((set, get) => ({
   hoveredId: null,
   editingChair: null, // { tableId, chairId }
   tool: 'select', // 'select' | 'pan'
+  assigningGuestId: null,
 
   setTool: (tool) => set({ tool }),
   select: (id) => set({ selectedIds: [id] }),
@@ -16,6 +17,9 @@ export const useSelectionStore = create((set, get) => ({
 
   setEditingChair: (tableId, chairId) => set({ editingChair: tableId && chairId ? { tableId, chairId } : null }),
   clearEditingChair: () => set({ editingChair: null }),
+
+  setAssigningGuest: (id) => set({ assigningGuestId: id }),
+  clearAssigningGuest: () => set({ assigningGuestId: null }),
 
   isSelected: (id) => get().selectedIds.includes(id),
 }));

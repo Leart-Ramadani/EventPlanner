@@ -4,6 +4,8 @@ import { useCanvasStore } from '../../store/canvasStore.js';
 import { useHistoryStore } from '../../store/historyStore.js';
 import { useSelectionStore } from '../../store/selectionStore.js';
 import { exportJSON, importJSON } from '../../utils/fileIO.js';
+import { saveProjectToCloud } from '../../utils/cloudSync.js';
+import { useAuthStore } from '../../store/authStore.js';
 import MobileGuestSearch from '../Sidebar/MobileGuestSearch.jsx';
 import {
   Undo2, Redo2, Maximize2, Save, FolderOpen, FilePlus,
@@ -13,12 +15,19 @@ import {
 export default function MobileTopBar({ darkMode, setDarkMode }) {
   const [showMenu, setShowMenu] = useState(false);
   const [showGuestSearch, setShowGuestSearch] = useState(false);
-  const { projectName, exportData, loadProject, newProject, getObjects, isDirty, setProjectName } = useProjectStore();
+  const { projectName, exportData, loadProject, newProject, getObjects, isDirty, setProjectName, markClean } = useProjectStore();
+  const { user } = useAuthStore();
   const { zoom, zoomIn, zoomOut, fitToScreen, toggleGrid, toggleSnap, gridVisible, snapToGrid } = useCanvasStore();
   const { canUndo, canRedo, undo, redo } = useHistoryStore();
   const { deselect } = useSelectionStore();
 
-  const handleSave = () => { exportJSON(exportData(), `${projectName}.json`); setShowMenu(false); };
+  const handleSave = async () => {
+    const data = exportData();
+    if (user) {
+      try { await saveProjectToCloud(user.id, data); markClean(); } catch (e) { alert('Failed to save: ' + e.message); }
+    }
+    setShowMenu(false);
+  };
   const handleOpen = async () => {
     try { const d = await importJSON(); loadProject(d); deselect(); } catch {}
     setShowMenu(false);

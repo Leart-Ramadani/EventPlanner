@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import PropertiesPanel from './PropertiesPanel.jsx';
 import LayersPanel from '../Layers/LayersPanel.jsx';
-import { Settings, Layers } from 'lucide-react';
+import GuestListPanel from './GuestListPanel.jsx';
+import { Settings, Layers, Users } from 'lucide-react';
 
 export default function RightSidebar() {
   const [tab, setTab] = useState('properties');
@@ -11,6 +12,7 @@ export default function RightSidebar() {
       <div className="flex border-b border-gray-200">
         {[
           { id: 'properties', icon: <Settings size={14} />, label: 'Properties' },
+          { id: 'guests', icon: <Users size={14} />, label: 'Guests' },
           { id: 'layers', icon: <Layers size={14} />, label: 'Layers' },
         ].map((t) => (
           <button
@@ -23,7 +25,9 @@ export default function RightSidebar() {
         ))}
       </div>
       <div className="flex-1 overflow-hidden">
-        {tab === 'properties' ? <PropertiesPanel /> : <LayersPanel />}
+        {tab === 'properties' && <PropertiesPanel />}
+        {tab === 'guests' && <GuestListPanel />}
+        {tab === 'layers' && <LayersPanel />}
       </div>
     </div>
   );

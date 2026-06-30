@@ -6,7 +6,8 @@ import { TABLE_TYPES, OBJECT_TYPES } from '../../data/defaultShapes.js';
 import { alignObjects, distributeHorizontally, distributeVertically } from '../../utils/geometry.js';
 import {
   AlignLeft, AlignRight, AlignCenterHorizontal, AlignCenterVertical,
-  AlignStartVertical, AlignEndVertical, Trash2, Copy, Lock, Unlock, Eye, EyeOff
+  AlignStartVertical, AlignEndVertical, Trash2, Copy, Lock, Unlock, Eye, EyeOff,
+  User, UserX
 } from 'lucide-react';
 
 function Label({ children }) {
@@ -146,6 +147,23 @@ export default function PropertiesPanel() {
           </section>
         )}
 
+        {/* Seat roster — shown when a table is selected */}
+        {isTable && obj.chairs?.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Seat List</p>
+              <span className="text-xs text-gray-400">
+                {obj.chairs.filter((c) => c.guestName).length}/{obj.chairs.length} filled
+              </span>
+            </div>
+            <div className="space-y-1">
+              {obj.chairs.map((chair, i) => (
+                <SeatRow key={chair.id} chair={chair} index={i} tableId={obj.id} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Text options */}
         {isText && (
           <section>
@@ -172,6 +190,32 @@ export default function PropertiesPanel() {
           </section>
         )}
       </div>
+    </div>
+  );
+}
+
+function SeatRow({ chair, index, tableId }) {
+  const { updateChair } = useProjectStore();
+  const { setEditingChair } = useSelectionStore();
+
+  return (
+    <div
+      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs cursor-pointer transition-colors ${chair.guestName ? 'bg-blue-50 hover:bg-blue-100' : 'bg-gray-50 hover:bg-gray-100'}`}
+      onClick={() => setEditingChair(tableId, chair.id)}
+      title="Click to edit seat"
+    >
+      <span className="text-gray-400 font-mono w-5 flex-shrink-0">{index + 1}</span>
+      {chair.guestName ? (
+        <>
+          <User size={11} className="text-blue-500 flex-shrink-0" />
+          <span className="flex-1 font-medium text-gray-800 truncate">{chair.guestName}</span>
+        </>
+      ) : (
+        <>
+          <UserX size={11} className="text-gray-300 flex-shrink-0" />
+          <span className="flex-1 text-gray-400 italic">Empty</span>
+        </>
+      )}
     </div>
   );
 }

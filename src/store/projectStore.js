@@ -9,6 +9,7 @@ const DEFAULT_PROJECT = {
   projectName: 'Untitled Event',
   floors: [DEFAULT_FLOOR],
   activeFloorId: 'floor_1',
+  guests: [],
   canvas: { zoom: 1, offsetX: 0, offsetY: 0 },
 };
 
@@ -147,6 +148,53 @@ export const useProjectStore = create((set, get) => ({
     });
   },
 
+  // --- Guests ---
+  addGuest: (name) => {
+    const guest = { id: `guest_${uuidv4()}`, name: name.trim() };
+    set((s) => ({ guests: [...s.guests, guest], isDirty: true }));
+    return guest;
+  },
+
+  removeGuest: (id) => set((s) => ({ guests: s.guests.filter((g) => g.id !== id), isDirty: true })),
+
+  renameGuest: (id, name) => set((s) => ({
+    guests: s.guests.map((g) => (g.id === id ? { ...g, name } : g)),
+    isDirty: true,
+  })),
+
+  // Returns map of guestName -> { tableId, chairId, tableLabel, chairIndex } for all floors
+  getAssignments: () => {
+    const { floors } = get();
+    const map = {};
+    for (const floor of floors) {
+      for (const obj of floor.objects) {
+        if (!obj.chairs) continue;
+        for (const chair of obj.chairs) {
+          if (chair.guestName) {
+            map[chair.guestName] = { tableId: obj.id, chairId: chair.id, tableLabel: obj.label, chairIndex: chair.index };
+          }
+        }
+      }
+    }
+    return map;
+  },
+
+  // Unassign a guest from whichever chair they're currently in (across all floors)
+  unassignGuest: (guestName) => {
+    set((s) => ({
+      floors: s.floors.map((floor) => ({
+        ...floor,
+        objects: floor.objects.map((obj) => {
+          if (!obj.chairs) return obj;
+          const hasGuest = obj.chairs.some((c) => c.guestName === guestName);
+          if (!hasGuest) return obj;
+          return { ...obj, chairs: obj.chairs.map((c) => c.guestName === guestName ? { ...c, guestName: '' } : c) };
+        }),
+      })),
+      isDirty: true,
+    }));
+  },
+
   // --- Project management ---
   setProjectName: (name) => set({ projectName: name, isDirty: true }),
 
@@ -155,19 +203,21 @@ export const useProjectStore = create((set, get) => ({
       projectName: data.projectName || 'Untitled Event',
       floors: data.floors || [DEFAULT_FLOOR],
       activeFloorId: data.activeFloorId || data.floors?.[0]?.id || 'floor_1',
+      guests: data.guests || [],
       isDirty: false,
     });
   },
 
   newProject: () => {
-    set({ ...DEFAULT_PROJECT, floors: [{ ...DEFAULT_FLOOR, id: `floor_${uuidv4()}` }], isDirty: false });
+    const newFloor = { ...DEFAULT_FLOOR, id: `floor_${uuidv4()}` };
+    set({ ...DEFAULT_PROJECT, floors: [newFloor], activeFloorId: newFloor.id, guests: [], isDirty: false });
   },
 
   markClean: () => set({ isDirty: false }),
 
   exportData: () => {
-    const { projectName, floors, activeFloorId } = get();
-    return { projectName, floors, activeFloorId };
+    const { projectName, floors, activeFloorId, guests } = get();
+    return { projectName, floors, activeFloorId, guests };
   },
 
   // Align multiple objects

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelectionStore } from '../../store/selectionStore.js';
 import { useProjectStore } from '../../store/projectStore.js';
 import { useMobile } from '../../hooks/useMobile.js';
-import { X, User, Phone, Mail, Utensils } from 'lucide-react';
+import { X, User } from 'lucide-react';
 
 const STATUS_OPTIONS = [
   { value: 'available', label: 'Available' },
@@ -27,11 +27,7 @@ export default function GuestPanel() {
   const { getObjects, updateChair } = useProjectStore();
   const { isMobile } = useMobile();
 
-  const [form, setForm] = useState({
-    guestName: '', guestPhone: '', guestEmail: '',
-    foodPreference: '', notes: '', status: 'available',
-    gender: '', ageGroup: '', color: '',
-  });
+  const [form, setForm] = useState({ guestName: '', status: 'available' });
 
   useEffect(() => {
     if (!editingChair) return;
@@ -55,7 +51,7 @@ export default function GuestPanel() {
   };
 
   const clear = () => {
-    const cleared = { guestName: '', guestPhone: '', guestEmail: '', foodPreference: '', notes: '', status: 'available', gender: '', ageGroup: '', color: '' };
+    const cleared = { guestName: '', status: 'available' };
     setForm(cleared);
     updateChair(editingChair.tableId, editingChair.chairId, cleared);
     clearEditingChair();
@@ -92,60 +88,10 @@ export default function GuestPanel() {
           </div>
         </div>
 
-        {/* Guest info */}
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1"><User size={10} /> Guest Name</label>
-            <input type="text" value={form.guestName} onChange={(e) => set('guestName', e.target.value)} placeholder="Full name" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1"><Phone size={10} /> Phone</label>
-            <input type="tel" value={form.guestPhone} onChange={(e) => set('guestPhone', e.target.value)} placeholder="+1 (555) 000-0000" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1"><Mail size={10} /> Email</label>
-            <input type="email" value={form.guestEmail} onChange={(e) => set('guestEmail', e.target.value)} placeholder="guest@example.com" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1"><Utensils size={10} /> Meal Preference</label>
-            <select value={form.foodPreference} onChange={(e) => set('foodPreference', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="">No preference</option>
-              <option value="standard">Standard</option>
-              <option value="vegetarian">Vegetarian</option>
-              <option value="vegan">Vegan</option>
-              <option value="halal">Halal</option>
-              <option value="kosher">Kosher</option>
-              <option value="gluten_free">Gluten-Free</option>
-              <option value="child_meal">Child Meal</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Gender</label>
-            <select value={form.gender} onChange={(e) => set('gender', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none">
-              <option value="">Not specified</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Age Group</label>
-            <select value={form.ageGroup} onChange={(e) => set('ageGroup', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none">
-              <option value="">Not specified</option>
-              <option value="child">Child (0–12)</option>
-              <option value="teen">Teen (13–17)</option>
-              <option value="adult">Adult (18+)</option>
-              <option value="senior">Senior (65+)</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Seat Color</label>
-            <input type="color" value={form.color || '#e5e7eb'} onChange={(e) => set('color', e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 cursor-pointer" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Notes</label>
-            <textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} rows={3} placeholder="Special requirements, notes..." className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
+        {/* Guest name */}
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1"><User size={10} /> Guest Name</label>
+          <input type="text" value={form.guestName} onChange={(e) => set('guestName', e.target.value)} placeholder="Full name" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
       </div>
 

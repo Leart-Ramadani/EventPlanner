@@ -5,6 +5,7 @@ import { useCanvasStore } from '../../store/canvasStore.js';
 import { useHistoryStore } from '../../store/historyStore.js';
 import { useSelectionStore } from '../../store/selectionStore.js';
 import { exportJSON, importJSON } from '../../utils/fileIO.js';
+import { saveProjectToCloud } from '../../utils/cloudSync.js';
 import { TABLE_TYPES } from '../../data/defaultShapes.js';
 import {
   Undo2, Redo2, ZoomIn, ZoomOut, Maximize2, RotateCcw, Grid3X3,
@@ -19,16 +20,27 @@ export default function TopBar({ darkMode, setDarkMode }) {
   const [showSearch, setShowSearch] = useState(false);
   const [projectNameEdit, setProjectNameEdit] = useState(false);
 
-  const { projectName, setProjectName, exportData, loadProject, newProject, getObjects, isDirty } = useProjectStore();
+  const { projectName, setProjectName, exportData, loadProject, newProject, getObjects, isDirty, markClean } = useProjectStore();
   const { user, signOut } = useAuthStore();
   const { zoom, zoomIn, zoomOut, fitToScreen, resetZoom, gridVisible, toggleGrid, snapToGrid, toggleSnap, setZoom } = useCanvasStore();
   const { canUndo, canRedo, undo, redo, push } = useHistoryStore();
   const { deselect } = useSelectionStore();
   const { setOffset } = useCanvasStore();
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const data = exportData();
-    exportJSON(data, `${projectName.replace(/\s+/g, '_')}.json`);
+    if (user) {
+      try {
+        await saveProjectToCloud(user.id, data);
+        markClean();
+      } catch (e) {
+        alert('Failed to save: ' + e.message);
+      }
+    }
+  };
+
+  const handleExport = () => {
+    exportJSON(exportData(), `${projectName.replace(/\s+/g, '_')}.json`);
   };
 
   const handleOpen = async () => {
@@ -113,7 +125,7 @@ export default function TopBar({ darkMode, setDarkMode }) {
         <TopBtn icon={<FilePlus size={15} />} label="New" onClick={handleNew} />
         <TopBtn icon={<FolderOpen size={15} />} label="Open" onClick={handleOpen} />
         <TopBtn icon={<Save size={15} />} label="Save" onClick={handleSave} />
-        <TopBtn icon={<Download size={15} />} label="Export" onClick={handleSave} />
+        <TopBtn icon={<Download size={15} />} label="Export" onClick={handleExport} />
       </div>
 
       <div className="w-px h-6 bg-gray-200" />
